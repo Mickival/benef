@@ -20,7 +20,6 @@ CORS(app)
 
 
 # SERVIR FRONTEND
-
 @app.route("/")
 def index():
     return send_from_directory(app.static_folder, "index.html")
@@ -37,15 +36,9 @@ def registrar_beneficiario():
     (ci,nombre,cite,nudecud,tipo_codigo,fecha_inicio,carga_horaria,periodo_meses,telefono)
     VALUES (?,?,?,?,?,?,?,?,?)
     """,(
-        data["ci"],
-        data["nombre"],
-        data["cite"],
-        data["nudecud"],
-        data["tipo_codigo"],
-        data["fecha_inicio"],
-        data["carga_horaria"],
-        data["periodo_meses"],
-        data["telefono"]
+        data["ci"], data["nombre"], data["cite"], data["nudecud"],
+        data["tipo_codigo"], data["fecha_inicio"], data["carga_horaria"],
+        data["periodo_meses"], data["telefono"]
     ))
     conn.commit()
     conn.close()
@@ -57,16 +50,10 @@ def registrar_beneficiario():
 def obtener_beneficiarios():
     conn = get_connection()
     cursor = conn.cursor()
-    query = """
-    SELECT 
-        ci,
-        nombre,
-        carga_horaria,
-        fecha_inicio,
-        periodo_meses
+    cursor.execute("""
+    SELECT ci, nombre, carga_horaria, fecha_inicio, periodo_meses
     FROM beneficiarios
-    """
-    cursor.execute(query)
+    """)
     rows = cursor.fetchall()
     beneficiarios = []
     for r in rows:
@@ -75,43 +62,36 @@ def obtener_beneficiarios():
         hoy = datetime.now()
         semanas_restantes = int((fecha_fin - hoy).days / 7)
         beneficiarios.append({
-            "ci": r["ci"],
-            "nombre": r["nombre"],
-            "carga": r["carga_horaria"],
-            "inicio": r["fecha_inicio"],
-            "periodo": r["periodo_meses"],
-            "semanas_restantes": semanas_restantes
+            "ci": r["ci"], "nombre": r["nombre"],
+            "carga": r["carga_horaria"], "inicio": r["fecha_inicio"],
+            "periodo": r["periodo_meses"], "semanas_restantes": semanas_restantes
         })
     conn.close()
     return jsonify(beneficiarios)
 
 
-# Cronograma Actividades
+# REGISTRAR ACTIVIDAD EN CRONOGRAMA
 @app.route("/api/cronograma", methods=["POST"])
 def registrar_actividad():
     data = request.json
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-    INSERT INTO actividades_mensuales
-    (fecha,descripcion)
-    VALUES (?,?)
-    """,(data["fecha"],data["descripcion"]))
+    INSERT INTO actividades_mensuales (fecha, descripcion) VALUES (?,?)
+    """,(data["fecha"], data["descripcion"]))
     conn.commit()
     conn.close()
-    return jsonify({"ok":True})
+    return jsonify({"ok": True})
 
 
-# Obtener cronograma
+# OBTENER CRONOGRAMA DEL MES
 @app.route("/api/cronograma/<anio>/<mes>")
 def obtener_cronograma(anio, mes):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-    SELECT *
-    FROM actividades_mensuales
-    WHERE strftime('%Y',fecha)=?
-    AND strftime('%m',fecha)=?
+    SELECT * FROM actividades_mensuales
+    WHERE strftime('%Y',fecha)=? AND strftime('%m',fecha)=?
     ORDER BY fecha
     """,(anio, mes.zfill(2)))
     data = [dict(r) for r in cursor.fetchall()]
@@ -119,138 +99,96 @@ def obtener_cronograma(anio, mes):
     return jsonify(data)
 
 
-# Obtener actividad de hoy
+# ACTIVIDAD DE HOY
 @app.route("/api/actividad_hoy")
 def actividad_hoy():
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("""
-    SELECT descripcion
-    FROM actividades_mensuales
-    WHERE fecha = DATE('now')
-    """)
+    cursor.execute("SELECT descripcion FROM actividades_mensuales WHERE fecha = DATE('now')")
     r = cursor.fetchone()
     conn.close()
     if r:
         return jsonify({"actividad": r["descripcion"]})
-    else:
-        return jsonify({"actividad": "Sin actividad registrada para hoy"})
+    return jsonify({"actividad": "Sin actividad registrada para hoy"})
 
 
-# Guardar asistencia
+# GUARDAR ASISTENCIA
 @app.route("/api/registrar_asistencia", methods=["POST"])
 def registrar_asistencia():
     registros = request.json
     conn = get_connection()
     cursor = conn.cursor()
-
     for r in registros:
         ci = r["ci"]
         fecha = r["fecha"]
         dia = r["dia"]
-
-        cursor.execute("""
-        SELECT id FROM asistencias
-        WHERE ci = ? AND fecha = ? AND dia = ?
-        """,(ci, fecha, dia))
-
-        existe = cursor.fetchone()
-        if existe:
+        cursor.execute("SELECT id FROM asistencias WHERE ci=? AND fecha=? AND dia=?", (ci, fecha, dia))
+        if cursor.fetchone():
             continue
-
         hora_inicio = datetime.strptime(r["hora_ingreso"], "%H:%M")
-        hora_fin = datetime.strptime(r["hora_salida"], "%H:%M")
+        hora_fin    = datetime.strptime(r["hora_salida"],  "%H:%M")
         horas = (hora_fin - hora_inicio).seconds / 3600
-
         cursor.execute("""
-        INSERT INTO asistencias
-        (ci,fecha,dia,hora_ingreso,hora_salida,horas)
+        INSERT INTO asistencias (ci,fecha,dia,hora_ingreso,hora_salida,horas)
         VALUES (?,?,?,?,?,?)
         """,(ci, fecha, dia, r["hora_ingreso"], r["hora_salida"], horas))
-
     conn.commit()
     conn.close()
-    return jsonify({"mensaje":"ok"})
+    return jsonify({"mensaje": "ok"})
 
 
-# Cargar cronograma lista
+# LISTA DE ACTIVIDADES (para selector de asistencia)
 @app.route("/api/cronograma_lista")
 def cronograma_lista():
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("""
-    SELECT fecha, descripcion
-    FROM actividades_mensuales
-    ORDER BY fecha DESC
-    """)
+    cursor.execute("SELECT fecha, descripcion FROM actividades_mensuales ORDER BY fecha DESC")
     data = [dict(r) for r in cursor.fetchall()]
     conn.close()
     return jsonify(data)
 
 
-# Cargar tabla de historial de asistencias
+# HISTORIAL DE ASISTENCIAS POR FECHA
 @app.route("/api/asistencia_historial/<fecha>")
 def asistencia_historial(fecha):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-    SELECT 
-        b.ci,
-        b.nombre,
-        b.carga_horaria,
-        a.fecha,
-        a.hora_ingreso,
-        a.hora_salida,
-        a.horas
+    SELECT b.ci, b.nombre, b.carga_horaria, a.fecha,
+           a.hora_ingreso, a.hora_salida, a.horas
     FROM asistencias a
     JOIN beneficiarios b ON a.ci = b.ci
     WHERE a.fecha = ?
     """,(fecha,))
     datos = cursor.fetchall()
     conn.close()
-    resultado = []
-    for d in datos:
-        resultado.append({
-            "ci": d[0],
-            "nombre": d[1],
-            "carga": d[2],
-            "fecha": d[3],
-            "hora_ingreso": d[4],
-            "hora_salida": d[5],
-            "horas": d[6]
-        })
-    return jsonify(resultado)
+    return jsonify([{
+        "ci": d[0], "nombre": d[1], "carga": d[2],
+        "fecha": d[3], "hora_ingreso": d[4], "hora_salida": d[5], "horas": d[6]
+    } for d in datos])
 
 
-# Beneficiario View
+# DATOS DE UN BENEFICIARIO
 @app.route("/api/beneficiario/<ci>")
 def obtener_beneficiario(ci):
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
-    SELECT ci,nombre,telefono,cite,nudecud,tipo_codigo,
-           fecha_inicio,carga_horaria,periodo_meses
-    FROM beneficiarios
-    WHERE ci = ?
+    SELECT ci,nombre,telefono,cite,nudecud,tipo_codigo,fecha_inicio,carga_horaria,periodo_meses
+    FROM beneficiarios WHERE ci=?
     """,(ci,))
     b = cursor.fetchone()
     conn.close()
     if not b:
         return jsonify({})
     return jsonify({
-        "ci": b[0],
-        "nombre": b[1],
-        "telefono": b[2],
-        "cite": b[3],
-        "codigo": b[4],
-        "tipo": b[5],
-        "fecha_inicio": b[6],
-        "carga": b[7],
-        "periodo": b[8]
+        "ci": b[0], "nombre": b[1], "telefono": b[2], "cite": b[3],
+        "codigo": b[4], "tipo": b[5], "fecha_inicio": b[6],
+        "carga": b[7], "periodo": b[8]
     })
 
 
-# Historial de beneficiarios
+# HISTORIAL DE ASISTENCIAS DEL BENEFICIARIO
 @app.route("/api/historial_beneficiario/<ci>")
 def historial_beneficiario(ci):
     conn = get_connection()
@@ -264,18 +202,72 @@ def historial_beneficiario(ci):
     """,(ci,))
     datos = cursor.fetchall()
     conn.close()
-    resultado = []
-    for d in datos:
-        resultado.append({
-            "fecha": d[0],
-            "actividad": d[1]
-        })
-    return jsonify(resultado)
+    return jsonify([{"fecha": d[0], "actividad": d[1]} for d in datos])
 
 
-# ============================================================
+# ================================================================
+# HELPERS COMPARTIDOS PARA GENERACIÓN DE INFORMES
+# ================================================================
+
+MESES_ES = ["enero","febrero","marzo","abril","mayo","junio",
+            "julio","agosto","septiembre","octubre","noviembre","diciembre"]
+DIAS_ES  = ["lunes","martes","miércoles","jueves","viernes","sábado","domingo"]
+
+
+def fmt_fecha_corta(f):
+    """'2026-03-21' → '21 de marzo de 2026'"""
+    d = datetime.strptime(f, "%Y-%m-%d")
+    return f"{d.day} de {MESES_ES[d.month-1]} de {d.year}"
+
+
+def fmt_fecha_larga(f):
+    """'2026-03-21' → 'sábado 21 de marzo de 2026'"""
+    d = datetime.strptime(f, "%Y-%m-%d")
+    return f"{DIAS_ES[d.weekday()]} {d.day:02d} de {MESES_ES[d.month-1]} de {d.year}"
+
+
+def fmt_fecha_obj(d):
+    """datetime obj → '21 de marzo de 2026'"""
+    return f"{d.day} de {MESES_ES[d.month-1]} de {d.year}"
+
+
+def calcular_fecha_conclusion(fecha_inicio_str, periodo_meses):
+    """
+    fecha_inicio + periodo_meses. Si el día no existe en el mes destino
+    usa el último día disponible (ej. 31-ene + 1 mes = 28/29-feb).
+    """
+    inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d")
+    anio_fin = inicio.year + (inicio.month - 1 + periodo_meses) // 12
+    mes_fin  = (inicio.month - 1 + periodo_meses) % 12 + 1
+    dia_fin  = min(inicio.day, monthrange(anio_fin, mes_fin)[1])
+    return datetime(anio_fin, mes_fin, dia_fin)
+
+
+def calificacion_por_porcentaje(porcentaje):
+    """Escala del reglamento GAMEA."""
+    if porcentaje == 100:  return "Excelente"
+    if porcentaje >= 75:   return "Bueno"
+    if porcentaje >= 50:   return "Regular"
+    if porcentaje >= 25:   return "Suficiente"
+    return "Observado o inexistente"
+
+
+def construir_lista_asistencias(rows):
+    """Rows: (fecha TEXT, descripcion TEXT). Devuelve lista para la plantilla."""
+    return [
+        {
+            "fecha":      fmt_fecha_corta(a[0]),
+            "actividad":  a[1] if a[1] else "Actividad comunitaria",
+            "asistencia": "SI",
+            "es_primera": idx == 0,
+        }
+        for idx, a in enumerate(rows)
+    ]
+
+
+# ================================================================
 # GENERAR INFORME MENSUAL
-# ============================================================
+# ================================================================
 
 @app.route("/api/generar_informe/<ci>/<anio>/<mes>")
 def generar_informe(ci, anio, mes):
@@ -283,188 +275,204 @@ def generar_informe(ci, anio, mes):
     conn = get_connection()
     cursor = conn.cursor()
 
-    # 1. Datos del beneficiario
     cursor.execute("""
     SELECT nombre, ci, carga_horaria, fecha_inicio, periodo_meses
-    FROM beneficiarios
-    WHERE ci = ?
+    FROM beneficiarios WHERE ci=?
     """,(ci,))
     b = cursor.fetchone()
-
     if not b:
         conn.close()
         return jsonify({"error": "Beneficiario no encontrado"}), 404
 
-    # 2. Asistencias del mes solicitado
     cursor.execute("""
     SELECT a.fecha, c.descripcion
     FROM asistencias a
     LEFT JOIN actividades_mensuales c ON a.fecha = c.fecha
-    WHERE a.ci = ?
-      AND strftime('%Y', a.fecha) = ?
-      AND strftime('%m', a.fecha) = ?
+    WHERE a.ci=?
+      AND strftime('%Y', a.fecha)=?
+      AND strftime('%m', a.fecha)=?
     ORDER BY a.fecha
     """,(ci, anio, mes.zfill(2)))
-    asistencias = cursor.fetchall()
+    rows = cursor.fetchall()
     conn.close()
 
-    # 3. Funciones de formato de fecha
-    MESES = ["enero","febrero","marzo","abril","mayo","junio",
-             "julio","agosto","septiembre","octubre","noviembre","diciembre"]
-    DIAS  = ["lunes","martes","miércoles","jueves","viernes","sábado","domingo"]
+    lista_asistencias = construir_lista_asistencias(rows)
 
-    def fecha_literal(f):
-        d = datetime.strptime(f, "%Y-%m-%d")
-        return f"{d.day} de {MESES[d.month-1]} de {d.year}"
+    nombre  = b[0]
+    carga   = b[2]
+    anio_i  = int(anio)
+    mes_i   = int(mes)
+    mes_txt = MESES_ES[mes_i - 1]
 
-    def fecha_completa_literal(f):
-        d = datetime.strptime(f, "%Y-%m-%d")
-        return f"{DIAS[d.weekday()]} {d.day:02d} de {MESES[d.month-1]} de {d.year}"
-
-    def mes_literal(m):
-        return MESES[int(m)-1]
-
-    # 4. Construir lista de asistencias para la plantilla
-    lista_asistencias = []
-    for idx, a in enumerate(asistencias):
-        lista_asistencias.append({
-            "fecha":      fecha_literal(a[0]),
-            "actividad":  a[1] if a[1] else "Actividad comunitaria",
-            "asistencia": "SI",
-            # Bandera para mostrar nombre solo en la primera fila
-            "es_primera": idx == 0,
-        })
-
-    # 5. Variables de contexto
-    nombre         = b[0]
-    mes_texto      = mes_literal(mes)
-    mes_anio_minus = f"{mes_texto} de {anio}"
-    mes_anio_mayus = f"{mes_texto.upper()} DE {anio}"
-
-    fecha_inicio_literal = fecha_completa_literal(b[3])
-
-    if asistencias:
+    if rows:
         periodo_literal = (
-            f"{fecha_completa_literal(asistencias[0][0])} "
-            f"hasta el {fecha_completa_literal(asistencias[-1][0])}"
+            f"{fmt_fecha_larga(rows[0][0])} "
+            f"hasta el {fmt_fecha_larga(rows[-1][0])}"
         )
     else:
         periodo_literal = "No registrado"
 
-    # -------------------------------------------------------
-    # CÁLCULO DE JORNADAS Y DESEMPEÑO
-    # -------------------------------------------------------
-    # Reglas del sistema:
-    #   - Carga 16h → debe asistir a TODOS los sábados Y lunes del mes
-    #                 (máx 8h por jornada, 2 jornadas por semana)
-    #   - Carga 4/6/8h → exactamente 4 jornadas al mes, eligiendo
-    #                 entre sábados o lunes (no importa cuáles)
-    #   - Una asistencia cuenta si tiene hora_ingreso registrada en BD
-    #     (en lista_asistencias ya filtramos solo los que asistieron)
-    # -------------------------------------------------------
-    anio_i = int(anio)
-    mes_i  = int(mes)
-    carga  = b[2]  # 4, 6, 8 ó 16
-
+    # Jornadas obligatorias del mes
     _, dias_en_mes = monthrange(anio_i, mes_i)
-
-    # Contar sábados (weekday==5) y lunes (weekday==0) del mes
-    sabados = sum(
-        1 for d in range(1, dias_en_mes + 1)
-        if datetime(anio_i, mes_i, d).weekday() == 5
-    )
-    lunes = sum(
-        1 for d in range(1, dias_en_mes + 1)
-        if datetime(anio_i, mes_i, d).weekday() == 0
-    )
-
     if carga == 16:
-        # Debe asistir a cada sábado Y cada lunes del mes
-        jornadas_a_trabajar = sabados + lunes
+        jornadas_a_trabajar = sum(
+            1 for d in range(1, dias_en_mes + 1)
+            if datetime(anio_i, mes_i, d).weekday() in (0, 5)
+        )
     else:
-        # Carga 4, 6 u 8: siempre 4 jornadas fijas al mes
         jornadas_a_trabajar = 4
 
-    # Jornadas efectivamente trabajadas = registros con asistencia en el mes
     jornadas_trabajadas = len(lista_asistencias)
-
-    # Porcentaje de cumplimiento (0-100, sin decimales)
-    if jornadas_a_trabajar > 0:
-        porcentaje = round((jornadas_trabajadas / jornadas_a_trabajar) * 100)
-    else:
-        porcentaje = 0
-
-    # Calificación según escala del reglamento:
-    # 100% = Excelente / 75% = Bueno / 50% = Regular /
-    # 25% = Suficiente / <25% = Observado o inexistente
-    if porcentaje == 100:
-        calificacion_asistencia = "Excelente"
-    elif porcentaje >= 75:
-        calificacion_asistencia = "Bueno"
-    elif porcentaje >= 50:
-        calificacion_asistencia = "Regular"
-    elif porcentaje >= 25:
-        calificacion_asistencia = "Suficiente"
-    else:
-        calificacion_asistencia = "Observado o inexistente"
-
-    # Desempeño: si asistió correctamente se evalúa como Bueno por defecto
-    # (el supervisor puede ajustar manualmente en el doc si lo requiere)
-    calificacion_desempeno = "Bueno"
+    porcentaje = round((jornadas_trabajadas / jornadas_a_trabajar) * 100) \
+                 if jornadas_a_trabajar else 0
 
     context = {
-        "nombre":            nombre,
-        "ci":                b[1],
-        "carga_horaria":     b[2],
-        "periodo_meses":     b[4],
-
-        # Mes/año formateado
-        "mes_anio_mayus_bold": mes_anio_mayus,
-        "mes_anio_minus":      mes_anio_minus,
-
-        # Nombre en distintos formatos
-        "nombre_titulo": nombre.title(),
-        "nombre_mayus":  nombre.upper(),
-
-        # Fechas
-        "fecha_inicio":    fecha_inicio_literal,
-        "periodo_literal": periodo_literal,
-
-        # Tabla de asistencias
-        "asistencias": lista_asistencias,
-
-        # Evaluación (segunda tabla)
-        "jornadas_a_trabajar":    jornadas_a_trabajar,
-        "jornadas_trabajadas":    jornadas_trabajadas,
-        "porcentaje":             porcentaje,
-        "calificacion_asistencia": calificacion_asistencia,
-        "calificacion_desempeno":  calificacion_desempeno,
-
-        # Mes y año sueltos (por si la plantilla los usa)
+        "nombre":              nombre,
+        "ci":                  b[1],
+        "carga_horaria":       carga,
+        "periodo_meses":       b[4],
+        "mes_anio_mayus_bold": f"{mes_txt.upper()} DE {anio}",
+        "mes_mayus_bold": f"{mes_txt.upper()}",
+        "mes_anio_minus":      f"{mes_txt} de {anio}",
+        "nombre_titulo":       nombre.title(),
+        "nombre_mayus":        nombre.upper(),
+        "fecha_inicio":        fmt_fecha_larga(b[3]),
+        "periodo_literal":     periodo_literal,
+        "asistencias":         lista_asistencias,
+        "jornadas_a_trabajar": jornadas_a_trabajar,
+        "jornadas_trabajadas": jornadas_trabajadas,
+        "porcentaje":          porcentaje,
+        "calificacion_asistencia": calificacion_por_porcentaje(porcentaje),
+        "calificacion_desempeno":  "Bueno",
         "mes":  mes,
         "anio": anio,
     }
 
-    # 6. Renderizar con docxtpl
-    plantilla_path = os.path.join(
-        BASE_DIR, "templates_word", "INF. MENSUAL PLANTILLA.docx"
-    )
-    doc = DocxTemplate(plantilla_path)
+    doc = DocxTemplate(os.path.join(BASE_DIR, "templates_word", "INF. MENSUAL PLANTILLA.docx"))
     doc.render(context)
-
-    # 7. Guardar en memoria y enviar
-    file_stream = BytesIO()
-    doc.save(file_stream)
-    file_stream.seek(0)
-
+    stream = BytesIO()
+    doc.save(stream)
+    stream.seek(0)
     return send_file(
-        file_stream,
-        as_attachment=True,
+        stream, as_attachment=True,
         download_name=f"informe_{ci}_{anio}_{mes}.docx",
-        mimetype=(
-            "application/vnd.openxmlformats-officedocument"
-            ".wordprocessingml.document"
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+
+
+# ================================================================
+# GENERAR INFORME DE CONCLUSIÓN
+# ================================================================
+
+@app.route("/api/generar_informe_conclusion/<ci>")
+def generar_informe_conclusion(ci):
+    """
+    Genera el informe de conclusión de penitencia.
+    Tabla 1: TODAS las asistencias de toda la condena.
+    Tabla 2: evaluación con jornadas totales esperadas vs trabajadas.
+
+    Reglas de jornadas totales:
+      - Carga 16h → todos los sábados + lunes en [fecha_inicio, fecha_conclusion]
+      - Carga 4/6/8h → 4 jornadas × periodo_meses
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    SELECT nombre, ci, carga_horaria, fecha_inicio, periodo_meses
+    FROM beneficiarios WHERE ci=?
+    """,(ci,))
+    b = cursor.fetchone()
+    if not b:
+        conn.close()
+        return jsonify({"error": "Beneficiario no encontrado"}), 404
+
+    nombre        = b[0]
+    carga         = b[2]
+    fecha_inicio  = b[3]   # "YYYY-MM-DD"
+    periodo_meses = b[4]
+
+    # Fecha de conclusión calculada
+    conclusion_dt = calcular_fecha_conclusion(fecha_inicio, periodo_meses)
+
+    # Todas las asistencias del período completo
+    cursor.execute("""
+    SELECT a.fecha, c.descripcion
+    FROM asistencias a
+    LEFT JOIN actividades_mensuales c ON a.fecha = c.fecha
+    WHERE a.ci=?
+    ORDER BY a.fecha
+    """,(ci,))
+    rows = cursor.fetchall()
+    conn.close()
+
+    lista_asistencias = construir_lista_asistencias(rows)
+
+    # Jornadas totales esperadas durante toda la condena
+    if carga == 16:
+        # Recorrer cada día del rango y contar sábados (5) y lunes (0)
+        inicio_dt = datetime.strptime(fecha_inicio, "%Y-%m-%d")
+        total_jornadas = 0
+        cur = inicio_dt
+        while cur <= conclusion_dt:
+            if cur.weekday() in (0, 5):
+                total_jornadas += 1
+            cur += timedelta(days=1)
+        jornadas_a_trabajar = total_jornadas
+    else:
+        # 4 jornadas por mes de condena
+        jornadas_a_trabajar = 4 * periodo_meses
+
+    jornadas_trabajadas = len(lista_asistencias)
+    porcentaje = round((jornadas_trabajadas / jornadas_a_trabajar) * 100) \
+                 if jornadas_a_trabajar else 0
+
+    # Período completo para el texto del informe
+    if rows:
+        periodo_literal = (
+            f"{fmt_fecha_larga(rows[0][0])} "
+            f"hasta el {fmt_fecha_larga(rows[-1][0])}"
         )
+    else:
+        periodo_literal = "No registrado"
+
+    context = {
+        "nombre":         nombre,
+        "ci":             b[1],
+        "carga_horaria":  carga,
+        "periodo_meses":  periodo_meses,
+
+        # Nombre en distintos formatos
+        "nombre_titulo":  nombre.title(),
+        "nombre_mayus":   nombre.upper(),
+
+        # Fechas clave — las nuevas etiquetas que pide la plantilla
+        "fecha_inicio_lit":     fmt_fecha_corta(fecha_inicio),
+        "fecha_conclusion_lit": fmt_fecha_obj(conclusion_dt),
+
+        # Período para el análisis narrativo
+        "periodo_literal": periodo_literal,
+
+        # Tabla 1: todas las asistencias de la condena
+        "asistencias": lista_asistencias,
+
+        # Tabla 2: evaluación final
+        "jornadas_a_trabajar":     jornadas_a_trabajar,
+        "jornadas_trabajadas":     jornadas_trabajadas,
+        "porcentaje":              porcentaje,
+        "calificacion_asistencia": calificacion_por_porcentaje(porcentaje),
+        "calificacion_desempeno":  "Bueno",
+    }
+
+    doc = DocxTemplate(os.path.join(BASE_DIR, "templates_word", "INF. DE CONCLUSION PLANTILLA.docx"))
+    doc.render(context)
+    stream = BytesIO()
+    doc.save(stream)
+    stream.seek(0)
+    return send_file(
+        stream, as_attachment=True,
+        download_name=f"conclusion_{ci}.docx",
+        mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     )
 
 

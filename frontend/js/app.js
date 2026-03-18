@@ -364,7 +364,7 @@ return true
 }
 
 
-// Activador de chackbox
+// Activador de checkbox
 function activarCheckboxes(){
 let checks = document.querySelectorAll(".checkAsistencia")
 checks.forEach(check=>{
@@ -480,13 +480,14 @@ tabla.innerHTML +=`
 document.getElementById("actividad_historial")?.addEventListener("change",cargarHistorial)
 
 
-// cargar datos beneficiario 
+// cargar datos beneficiario
 async function cargarDatosBeneficiario(){
 let ci = obtenerCI()
 if(!ci) return
 let res = await fetch(`/api/beneficiario/${ci}`)
 let b = await res.json()
 let cont = document.getElementById("datos_beneficiario")
+if(!cont) return
 
 cont.innerHTML = `
 <p><b>CI:</b> ${b.ci}</p>
@@ -501,13 +502,14 @@ cont.innerHTML = `
 }
 
 
-//cargar historial del beneficiario
+// cargar historial del beneficiario
 async function cargarHistorialBeneficiario(){
 let ci = obtenerCI()
 if(!ci) return
 let res = await fetch(`/api/historial_beneficiario/${ci}`)
 let data = await res.json()
 let cont = document.getElementById("historial_beneficiario")
+if(!cont) return
 cont.innerHTML = ""
 let grupos = {}
 data.forEach(r=>{
@@ -535,9 +537,15 @@ cont.innerHTML += `<p>• ${r.fecha} → ${r.actividad}</p>`
 }
 
 
-//Geerar informe
+// Generar informe mensual
 function generarInforme(anio, mes){
 let ci = obtenerCI()
 window.open(`/api/generar_informe/${ci}/${anio}/${mes}`, "_blank")
 }
 
+
+// Generar informe de conclusión de penitencia
+function generarInformeConclusion(){
+let ci = obtenerCI()
+window.open(`/api/generar_informe_conclusion/${ci}`, "_blank")
+}
