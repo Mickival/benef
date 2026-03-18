@@ -373,18 +373,6 @@ def generar_informe(ci, anio, mes):
         return f"{dia_semana} {fecha.day:02d} de {meses[fecha.month-1]} de {fecha.year}"
     from docx import Document
 
-    def limpiar_parrafos_vacios(ruta_docx):
-        doc = Document(ruta_docx)
-
-        for table in doc.tables:
-            for row in table.rows:
-                for cell in row.cells:
-                    paragraphs = cell.paragraphs
-                    for p in paragraphs:
-                        if not p.text.strip():
-                            p._element.getparent().remove(p._element)
-
-        doc.save(ruta_docx)
 
 
     lista = []
@@ -439,7 +427,6 @@ def generar_informe(ci, anio, mes):
     # 🔹 5. Guardar en memoria (no archivo físico)
     file_stream = BytesIO()
     doc.save(file_stream)
-    limpiar_parrafos_vacios(file_stream)
     file_stream.seek(0)
     return send_file(
         file_stream,
