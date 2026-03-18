@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Registrar Asistencia</title>
+
+<link rel="stylesheet" href="css/styles.css">
+
+</head>
+
+<body>
+<a href="index.html">⬅ Volver</a>
+<h2>Registro de asistencia</h2>
+
+<label>Seleccionar actividad</label>
+
+<select id="actividad_dia" onchange="cargarAsistencia()" class="select_actividad">
+<option value="">Seleccione actividad</option>
+</select>
+
+
+<br><br>
+
+<table border="1">
+
+<thead>
+
+<tr>
+<th>Asistió</th>
+<th>CI</th>
+<th>Nombre</th>
+<th>Carga horaria</th>
+<th>Día</th>
+<th>Ingreso</th>
+<th>Salida</th>
+
+</tr>
+
+</thead>
+
+<tbody id="tabla_asistencia">
+
+</tbody>
+
+</table>
+
+<br>
+
+<button onclick="guardarAsistencia()">Guardar asistencia</button>
+
+<script src="js/app.js"></script>
+
+</body>
+
+</html>

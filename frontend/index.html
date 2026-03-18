@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Beneficiarios</title>
+
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Sistema de Control de Trabajo Comunitario</h1>
+
+        <div class="menu">
+
+            <a href="nuevo_beneficiario.html" class="btn">
+            Registrar beneficiario
+            </a>
+
+            <a href="cronograma.html" class="btn">
+            Cronograma de actividades
+            </a>
+
+            <a href="registrar_asistencia.html" class="btn">
+            Registrar asistencia
+            </a>
+
+            <a href="historial.html" class="btn">
+            Historial de asistencias
+            </a>
+
+        </div>
+
+        <h2>Beneficiarios registrados</h2>
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>CI</th>
+                    <th>Nombre</th>
+                    <th>Carga Horaria</th>
+                    <th>Fecha Inicio</th>
+                    <th>Periodo</th>
+                    <th>Semanas restantes</th>
+                </tr>
+
+            </thead>
+
+            <tbody id="tabla_beneficiarios">
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <script src="js/app.js"></script>
+
+</body>
+
+</html>

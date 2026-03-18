@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<title>Cronograma de actividades</title>
+
+<link rel="stylesheet" href="css/styles.css">
+
+</head>
+
+<body>
+
+<div class="page">
+
+<h1 class="titulo">Cronograma de actividades</h1>
+
+<div class="container_grid">
+
+<!-- FORMULARIO -->
+
+<div class="card formulario">
+
+<h2>Registrar actividad</h2>
+
+<label>Mes</label>
+<select id="mes">
+<option value="1">Enero</option>
+<option value="2">Febrero</option>
+<option value="3">Marzo</option>
+<option value="4">Abril</option>
+<option value="5">Mayo</option>
+<option value="6">Junio</option>
+<option value="7">Julio</option>
+<option value="8">Agosto</option>
+<option value="9">Septiembre</option>
+<option value="10">Octubre</option>
+<option value="11">Noviembre</option>
+<option value="12">Diciembre</option>
+</select>
+
+<label>Año</label>
+<select id="anio"></select>
+
+<label>Fecha</label>
+<input type="date" id="fecha">
+
+<label>Actividad</label>
+<input id="actividad" placeholder="Ej: Limpieza del parque">
+
+<button class="btn_principal" onclick="registrarActividad()">
+Registrar actividad
+</button>
+
+</div>
+
+<!-- TABLA -->
+
+<div class="card tabla_panel">
+
+<h2 id="titulo_tabla">Actividades del mes</h2>
+
+<table>
+
+<thead>
+
+<tr>
+<th>Fecha</th>
+<th>Actividad</th>
+</tr>
+
+</thead>
+
+<tbody id="tabla_actividades"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="js/app.js"></script>
+
+</body>
+
+</html>
