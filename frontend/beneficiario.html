@@ -1,11 +1,53 @@
-<h2>Expediente del Beneficiario</h2>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expediente del Beneficiario</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .mes-card { animation: fadeUp 0.3s ease both; }
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(10px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+  </style>
+</head>
+<body>
 
-<div id="datos_beneficiario"></div>
+  <nav class="navbar">
+    <a class="navbar-brand" href="index.html">Sistema de Trabajo Comunitario</a>
+  </nav>
 
-<hr>
+  <div class="container">
 
-<div id="historial_beneficiario"></div>
+    <a href="index.html" class="volver">← Volver al panel</a>
 
-<button onclick="generarInformeConclusion()">Generar Informe de Conclusión</button>
+    <h1>Expediente del Beneficiario</h1>
 
-<script src="js/app.js"></script>
+    <div class="card" style="margin-bottom:24px;">
+      <h2 style="margin-bottom:16px;">Datos personales</h2>
+      <div id="datos_beneficiario" class="datos-grid"></div>
+    </div>
+
+    <hr>
+
+    <h2>Historial de asistencias</h2>
+
+    <div id="historial_beneficiario"></div>
+
+    <div class="banner-conclusion">
+      <div class="banner-conclusion-texto">
+        <strong>⚖ Informe de Conclusión de Penitencia</strong>
+        <p>Recopila todas las jornadas asistidas durante el período completo de la condena.</p>
+      </div>
+      <button class="btn-conclusion" onclick="generarInformeConclusion()">
+        Generar Informe de Conclusión
+      </button>
+    </div>
+
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

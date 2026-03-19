@@ -265,6 +265,50 @@ def construir_lista_asistencias(rows):
     ]
 
 
+UNIDADES = [
+    "", "un", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve",
+    "diez", "once", "doce", "trece", "catorce", "quince", "dieciséis",
+    "diecisiete", "dieciocho", "diecinueve", "veinte", "veintiún", "veintidós",
+    "veintitrés", "veinticuatro", "veinticinco", "veintiséis", "veintisiete",
+    "veintiocho", "veintinueve",
+]
+DECENAS = [
+    "", "", "veinte", "treinta", "cuarenta", "cincuenta",
+    "sesenta", "setenta", "ochenta", "noventa",
+]
+
+def numero_a_letras(n):
+    """Convierte un entero (0-199) a su texto en español."""
+    if n == 0:
+        return "cero"
+    if n < 30:
+        return UNIDADES[n]
+    if n < 100:
+        dec = DECENAS[n // 10]
+        uni = n % 10
+        return dec if uni == 0 else f"{dec} y {UNIDADES[uni]}"
+    if n == 100:
+        return "cien"
+    if n < 200:
+        uni = n - 100
+        return "ciento" if uni == 0 else f"ciento {numero_a_letras(uni)}"
+    return str(n)   # fallback para valores fuera de rango
+
+
+def fmt_semanas(fecha_inicio_str, fecha_conclusion_dt):
+    """
+    Calcula las semanas exactas entre fecha_inicio y fecha_conclusion
+    y devuelve el texto con formato '(52) cincuenta y dos semanas'.
+    """
+    inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d")
+    dias   = (fecha_conclusion_dt - inicio).days
+    semanas = dias // 7
+    texto  = numero_a_letras(semanas)
+    if semanas == 1:
+        return f"({semanas}) una semana"
+    return f"({semanas}) {texto} semanas"
+
+
 # ================================================================
 # GENERAR INFORME MENSUAL
 # ================================================================
@@ -337,7 +381,7 @@ def generar_informe(ci, anio, mes):
         "nombre_mayus":        nombre.upper(),
         "fecha_inicio":        fmt_fecha_larga(b[3]),
         "fecha_inicio_normal": datetime.strptime(b[3], "%Y-%m-%d").strftime("%d/%m/%y"),
-        "calcular_semanas":    periodo_meses * 4,
+        "calcular_semanas":    fmt_semanas(b[3], calcular_fecha_conclusion(b[3], b[4])),
         "periodo_literal":     periodo_literal,
         "asistencias":         lista_asistencias,
         "jornadas_a_trabajar": jornadas_a_trabajar,
@@ -462,7 +506,7 @@ def generar_informe_conclusion(ci):
         "fecha_inicio":         fmt_fecha_larga(fecha_inicio),
         "fecha_inicio_normal":  datetime.strptime(fecha_inicio, "%Y-%m-%d").strftime("%d/%m/%y"),
         "fecha_normal":         datetime.now().strftime("%d/%m/%y"),
-        "calcular_semanas":     periodo_meses * 4,
+        "calcular_semanas":     fmt_semanas(fecha_inicio, conclusion_dt),
         "periodo_literal": periodo_literal,
         "asistencias": lista_asistencias,
         "jornadas_a_trabajar":     jornadas_a_trabajar,
@@ -473,7 +517,7 @@ def generar_informe_conclusion(ci):
         "observacion_desempeno":   observacion,
     }
 
-    doc = DocxTemplate(os.path.join(BASE_DIR, "templates_word", "INF. CONCLUSION PLANTILLA.docx"))
+    doc = DocxTemplate(os.path.join(BASE_DIR, "templates_word", "INF. DE CONCLUSION PLANTILLA.docx"))
     doc.render(context)
     stream = BytesIO()
     doc.save(stream)

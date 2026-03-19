@@ -1,89 +1,84 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-
-<meta charset="UTF-8">
-<title>Cronograma de actividades</title>
-
-<link rel="stylesheet" href="css/styles.css">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cronograma de Actividades</title>
+  <link rel="stylesheet" href="css/styles.css">
 </head>
-
 <body>
 
-<div class="page">
+  <nav class="navbar">
+    <a class="navbar-brand" href="index.html">Sistema de Trabajo Comunitario</a>
+  </nav>
 
-<h1 class="titulo">Cronograma de actividades</h1>
+  <div class="page">
 
-<div class="container_grid">
+    <a href="index.html" class="volver">← Volver al panel</a>
 
-<!-- FORMULARIO -->
+    <h1>Cronograma de Actividades</h1>
 
-<div class="card formulario">
+    <div class="container_grid">
 
-<h2>Registrar actividad</h2>
+      <!-- FORMULARIO -->
+      <div class="card formulario">
 
-<label>Mes</label>
-<select id="mes">
-<option value="1">Enero</option>
-<option value="2">Febrero</option>
-<option value="3">Marzo</option>
-<option value="4">Abril</option>
-<option value="5">Mayo</option>
-<option value="6">Junio</option>
-<option value="7">Julio</option>
-<option value="8">Agosto</option>
-<option value="9">Septiembre</option>
-<option value="10">Octubre</option>
-<option value="11">Noviembre</option>
-<option value="12">Diciembre</option>
-</select>
+        <h2>Registrar actividad</h2>
 
-<label>Año</label>
-<select id="anio"></select>
+        <label>Mes</label>
+        <select id="mes">
+          <option value="1">Enero</option>
+          <option value="2">Febrero</option>
+          <option value="3">Marzo</option>
+          <option value="4">Abril</option>
+          <option value="5">Mayo</option>
+          <option value="6">Junio</option>
+          <option value="7">Julio</option>
+          <option value="8">Agosto</option>
+          <option value="9">Septiembre</option>
+          <option value="10">Octubre</option>
+          <option value="11">Noviembre</option>
+          <option value="12">Diciembre</option>
+        </select>
 
-<label>Fecha</label>
-<input type="date" id="fecha">
+        <label>Año</label>
+        <select id="anio"></select>
 
-<label>Actividad</label>
-<input id="actividad" placeholder="Ej: Limpieza del parque">
+        <label>Fecha</label>
+        <input type="date" id="fecha">
 
-<button class="btn_principal" onclick="registrarActividad()">
-Registrar actividad
-</button>
+        <label>Descripción de la actividad</label>
+        <input id="actividad" placeholder="Ej: Limpieza del parque">
 
-</div>
+        <button class="btn_principal" onclick="registrarActividad()">
+          Registrar Actividad
+        </button>
 
-<!-- TABLA -->
+      </div>
 
-<div class="card tabla_panel">
+      <!-- TABLA -->
+      <div class="tabla_panel">
 
-<h2 id="titulo_tabla">Actividades del mes</h2>
+        <h2 id="titulo_tabla">Actividades del mes</h2>
 
-<table>
+        <div class="tabla-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Actividad</th>
+              </tr>
+            </thead>
+            <tbody id="tabla_actividades"></tbody>
+          </table>
+        </div>
 
-<thead>
+      </div>
 
-<tr>
-<th>Fecha</th>
-<th>Actividad</th>
-</tr>
+    </div>
 
-</thead>
+  </div>
 
-<tbody id="tabla_actividades"></tbody>
-
-</table>
-
-</div>
-
-</div>
-
-</div>
-
-<script src="js/app.js"></script>
-
+  <script src="js/app.js"></script>
 </body>
-
 </html>

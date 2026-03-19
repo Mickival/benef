@@ -1,66 +1,49 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Sistema de Beneficiarios</title>
-
-    <link rel="stylesheet" href="css/styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Trabajo Comunitario</title>
+  <link rel="stylesheet" href="css/styles.css">
 </head>
-
 <body>
 
-    <div class="container">
+  <nav class="navbar">
+    <a class="navbar-brand" href="index.html">Sistema de Trabajo Comunitario</a>
+    <span style="font-size:0.85rem; color:var(--gris-400);">GAMEA</span>
+  </nav>
 
-        <h1>Sistema de Control de Trabajo Comunitario</h1>
+  <div class="container">
 
-        <div class="menu">
+    <h1>Panel de Control</h1>
 
-            <a href="nuevo_beneficiario.html" class="btn">
-            Registrar beneficiario
-            </a>
-
-            <a href="cronograma.html" class="btn">
-            Cronograma de actividades
-            </a>
-
-            <a href="registrar_asistencia.html" class="btn">
-            Registrar asistencia
-            </a>
-
-            <a href="historial.html" class="btn">
-            Historial de asistencias
-            </a>
-
-        </div>
-
-        <h2>Beneficiarios registrados</h2>
-
-        <table>
-
-            <thead>
-
-                <tr>
-                    <th>CI</th>
-                    <th>Nombre</th>
-                    <th>Carga Horaria</th>
-                    <th>Fecha Inicio</th>
-                    <th>Periodo</th>
-                    <th>Semanas restantes</th>
-                </tr>
-
-            </thead>
-
-            <tbody id="tabla_beneficiarios">
-
-            </tbody>
-
-        </table>
-
+    <div class="menu">
+      <a href="nuevo_beneficiario.html" class="btn">➕ Registrar Beneficiario</a>
+      <a href="cronograma.html"         class="btn">📅 Cronograma de Actividades</a>
+      <a href="registrar_asistencia.html" class="btn">✅ Registrar Asistencia</a>
+      <a href="historial.html"          class="btn">📋 Historial de Asistencias</a>
     </div>
 
-    <script src="js/app.js"></script>
+    <h2>Beneficiarios Registrados</h2>
 
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>CI</th>
+            <th>Nombre</th>
+            <th>Carga Horaria</th>
+            <th>Fecha Inicio</th>
+            <th>Periodo</th>
+            <th>Semanas Restantes</th>
+          </tr>
+        </thead>
+        <tbody id="tabla_beneficiarios"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script src="js/app.js"></script>
 </body>
-
 </html>

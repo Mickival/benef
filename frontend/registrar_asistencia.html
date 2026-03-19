@@ -1,56 +1,58 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="es">
 <head>
-
-<title>Registrar Asistencia</title>
-
-<link rel="stylesheet" href="css/styles.css">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registrar Asistencia</title>
+  <link rel="stylesheet" href="css/styles.css">
 </head>
-
 <body>
-<a href="index.html">⬅ Volver</a>
-<h2>Registro de asistencia</h2>
 
-<label>Seleccionar actividad</label>
+  <nav class="navbar">
+    <a class="navbar-brand" href="index.html">Sistema de Trabajo Comunitario</a>
+  </nav>
 
-<select id="actividad_dia" onchange="cargarAsistencia()" class="select_actividad">
-<option value="">Seleccione actividad</option>
-</select>
+  <div class="container">
 
+    <a href="index.html" class="volver">← Volver al panel</a>
 
-<br><br>
+    <h1>Registro de Asistencia</h1>
 
-<table border="1">
+    <div class="card" style="margin-bottom:24px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:220px;">
+        <label style="display:block; font-size:0.8rem; font-weight:700; text-transform:uppercase;
+                      letter-spacing:0.4px; color:var(--gris-400); margin-bottom:6px;">
+          Actividad del día
+        </label>
+        <select id="actividad_dia" onchange="cargarAsistencia()" class="select_actividad"
+                style="width:100%;">
+          <option value="">Seleccione una actividad</option>
+        </select>
+      </div>
+      <button onclick="guardarAsistencia()" class="btn" style="margin-top:14px;">
+        💾 Guardar Asistencia
+      </button>
+    </div>
 
-<thead>
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Asistió</th>
+            <th>CI</th>
+            <th>Nombre</th>
+            <th>Carga Horaria</th>
+            <th>Día</th>
+            <th>Ingreso</th>
+            <th>Salida</th>
+          </tr>
+        </thead>
+        <tbody id="tabla_asistencia"></tbody>
+      </table>
+    </div>
 
-<tr>
-<th>Asistió</th>
-<th>CI</th>
-<th>Nombre</th>
-<th>Carga horaria</th>
-<th>Día</th>
-<th>Ingreso</th>
-<th>Salida</th>
+  </div>
 
-</tr>
-
-</thead>
-
-<tbody id="tabla_asistencia">
-
-</tbody>
-
-</table>
-
-<br>
-
-<button onclick="guardarAsistencia()">Guardar asistencia</button>
-
-<script src="js/app.js"></script>
-
+  <script src="js/app.js"></script>
 </body>
-
 </html>

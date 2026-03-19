@@ -1,75 +1,79 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-
-<meta charset="UTF-8">
-<title>Registrar Beneficiario</title>
-
-<link rel="stylesheet" href="css/styles.css">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registrar Beneficiario</title>
+  <link rel="stylesheet" href="css/styles.css">
 </head>
-
 <body>
 
-<div class="container">
+  <nav class="navbar">
+    <a class="navbar-brand" href="index.html">Sistema de Trabajo Comunitario</a>
+  </nav>
 
-<h1>Registrar nuevo beneficiario</h1>
+  <div class="container">
 
-<div class="formulario">
+    <a href="index.html" class="volver">← Volver al panel</a>
 
-<label>CI</label>
-<input id="ci">
+    <h1>Registrar Beneficiario</h1>
 
-<label>Nombre completo</label>
-<input id="nombre">
+    <div style="max-width:520px; margin:0 auto;">
+      <div class="card formulario">
 
-<label>Teléfono</label>
-<input id="telefono">
+        <h2 style="margin-bottom:4px;">Datos del beneficiario</h2>
+        <p style="font-size:0.85rem; color:var(--gris-400); margin-bottom:8px;">
+          Complete todos los campos para registrar al nuevo beneficiario.
+        </p>
 
-<label>CITE</label>
-<input id="cite">
+        <label>Cédula de Identidad (CI)</label>
+        <input id="ci" placeholder="Ej: 7894561LP">
 
-<label>Tipo de código</label>
-<select id="tipo_codigo">
-<option value="NUREJ">NUREJ</option>
-<option value="CUD">CUD</option>
-</select>
+        <label>Nombre completo</label>
+        <input id="nombre" placeholder="Ej: Juan Carlos Mamani Quispe">
 
-<label>Número de código</label>
-<input id="codigo">
+        <label>Teléfono</label>
+        <input id="telefono" placeholder="Ej: 76543210">
 
-<label>Carga horaria</label>
-<select  id="carga">
-<option>Seleccione carga horaria</option>
-<option value="4">4</option>
-<option value="6">6</option>
-<option value="8">8</option>
-<option value="16">16</option>
-</select>
+        <label>CITE</label>
+        <input id="cite" placeholder="Ej: GAMEA-12345-2026">
 
-<label>Fecha inicio</label>
-<input type="date" id="fecha">
+        <label>Tipo de código</label>
+        <select id="tipo_codigo">
+          <option value="NUREJ">NUREJ</option>
+          <option value="CUD">CUD</option>
+        </select>
 
-<label>Periodo (meses)</label>
-<input id="periodo">
+        <label>Número de código</label>
+        <input id="codigo" placeholder="Número NUREJ o CUD">
 
-<br><br>
+        <label>Carga horaria semanal</label>
+        <select id="carga">
+          <option value="" disabled selected>Seleccione carga horaria</option>
+          <option value="4">4 horas</option>
+          <option value="6">6 horas</option>
+          <option value="8">8 horas</option>
+          <option value="16">16 horas</option>
+        </select>
 
-<button class="btn" onclick="registrarBeneficiario()">
-Registrar beneficiario
-</button>
+        <label>Fecha de inicio</label>
+        <input type="date" id="fecha">
 
-<a href="index.html" class="btn_secundario">
-Volver
-</a>
+        <label>Periodo (meses)</label>
+        <input id="periodo" type="number" placeholder="Ej: 12">
 
-</div>
+        <div style="display:flex; gap:12px; margin-top:24px;">
+          <button class="btn_principal" style="flex:1;" onclick="registrarBeneficiario()">
+            Registrar Beneficiario
+          </button>
+          <a href="index.html" class="btn_secundario">Cancelar</a>
+        </div>
 
-</div>
+      </div>
+    </div>
 
-<script src="js/app.js"></script>
+  </div>
 
+  <script src="js/app.js"></script>
 </body>
-
 </html>

@@ -490,14 +490,14 @@ let cont = document.getElementById("datos_beneficiario")
 if(!cont) return
 
 cont.innerHTML = `
-<p><b>CI:</b> ${b.ci}</p>
-<p><b>Nombre:</b> ${b.nombre}</p>
-<p><b>Teléfono:</b> ${b.telefono}</p>
-<p><b>CITE:</b> ${b.cite}</p>
-<p><b>${b.tipo}:</b> ${b.codigo}</p>
-<p><b>Fecha inicio:</b> ${b.fecha_inicio}</p>
-<p><b>Carga horaria:</b> ${b.carga}</p>
-<p><b>Periodo:</b> ${b.periodo} meses</p>
+<div class="dato-item"><span class="dato-label">CI</span><span class="dato-valor">${b.ci}</span></div>
+<div class="dato-item"><span class="dato-label">Nombre</span><span class="dato-valor">${b.nombre}</span></div>
+<div class="dato-item"><span class="dato-label">Teléfono</span><span class="dato-valor">${b.telefono}</span></div>
+<div class="dato-item"><span class="dato-label">CITE</span><span class="dato-valor">${b.cite}</span></div>
+<div class="dato-item"><span class="dato-label">${b.tipo}</span><span class="dato-valor">${b.codigo}</span></div>
+<div class="dato-item"><span class="dato-label">Fecha inicio</span><span class="dato-valor">${b.fecha_inicio}</span></div>
+<div class="dato-item"><span class="dato-label">Carga horaria</span><span class="dato-valor">${b.carga} hrs/semana</span></div>
+<div class="dato-item"><span class="dato-label">Periodo</span><span class="dato-valor">${b.periodo} meses</span></div>
 `
 }
 
@@ -524,18 +524,20 @@ grupos[clave].push(r)
 })
 for(let clave in grupos){
 let [anio, mes] = clave.split("-")
+const mesesNombre = ["","Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"]
+let filas = grupos[clave].map(r=>`<p class="mes-asistencia">${r.fecha} → ${r.actividad}</p>`).join("")
 cont.innerHTML += `
-<div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-<h3>${mes}/${anio}</h3>
-<div style="display:flex; gap:8px;">
-  <button onclick="generarInforme('${anio}','${mes}')">Generar Informe</button>
-  <button onclick="generarPlanillaAsistencia('${anio}','${mes}')">Generar Planilla de Asistencia</button>
-</div>
+<div class="mes-card">
+  <div class="mes-header">
+    <span class="mes-title">${mesesNombre[parseInt(mes)]} ${anio}</span>
+    <div class="mes-acciones">
+      <button class="btn-informe" onclick="generarInforme('${anio}','${mes}')">📄 Generar Informe</button>
+      <button class="btn-planilla" onclick="generarPlanillaAsistencia('${anio}','${mes}')">📋 Generar Planilla</button>
+    </div>
+  </div>
+  ${filas}
 </div>
 `
-grupos[clave].forEach(r=>{
-cont.innerHTML += `<p>• ${r.fecha} → ${r.actividad}</p>`
-})
 }
 }
 
