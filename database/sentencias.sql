@@ -196,3 +196,39 @@ SELECT * FROM asistencias;
 SELECT * FROM beneficiarios;
 
 SELECT name FROM sqlite_master WHERE type='table';
+
+
+-- ============================================================
+-- LIMPIEZA COMPLETA DE LA BASE DE DATOS
+-- Elimina todos los datos y reinicia los contadores de ID
+-- ============================================================
+
+PRAGMA foreign_keys = OFF;
+
+-- 1. Vaciar todas las tablas en orden correcto
+--    (primero las que tienen FK, después las referenciadas)
+DELETE FROM informes;
+DELETE FROM asistencias;
+DELETE FROM actividades_mensuales;
+DELETE FROM beneficiarios;
+
+-- 2. Reiniciar contadores AUTOINCREMENT
+--    SQLite guarda el último ID en la tabla interna sqlite_sequence
+DELETE FROM sqlite_sequence WHERE name = 'informes';
+DELETE FROM sqlite_sequence WHERE name = 'asistencias';
+DELETE FROM sqlite_sequence WHERE name = 'actividades_mensuales';
+DELETE FROM sqlite_sequence WHERE name = 'beneficiarios';
+
+PRAGMA foreign_keys = ON;
+
+-- 3. Opcional: compactar el archivo .db para liberar espacio en disco
+VACUUM;
+
+-- Verificación — todas deben devolver 0
+SELECT 'beneficiarios'       AS tabla, COUNT(*) AS registros FROM beneficiarios
+UNION ALL
+SELECT 'asistencias',                  COUNT(*)               FROM asistencias
+UNION ALL
+SELECT 'actividades_mensuales',        COUNT(*)               FROM actividades_mensuales
+UNION ALL
+SELECT 'informes',                     COUNT(*)               FROM informes;

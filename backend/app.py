@@ -517,7 +517,7 @@ def generar_informe_conclusion(ci):
         "observacion_desempeno":   observacion,
     }
 
-    doc = DocxTemplate(os.path.join(BASE_DIR, "templates_word", "INF. DE CONCLUSION PLANTILLA.docx"))
+    doc = DocxTemplate(os.path.join(BASE_DIR, "templates_word", "INF. CONCLUSION PLANTILLA.docx"))
     doc.render(context)
     stream = BytesIO()
     doc.save(stream)
@@ -526,6 +526,145 @@ def generar_informe_conclusion(ci):
         stream, as_attachment=True,
         download_name=f"conclusion_{ci}.docx",
         mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    )
+
+
+# ================================================================
+# GENERAR PLANILLA DE ASISTENCIA (XLSX)
+# ================================================================
+
+@app.route("/api/generar_planilla/<ci>/<anio>/<mes>")
+def generar_planilla(ci, anio, mes):
+    """
+    Genera la planilla mensual usando el template FORMATO_PLANILLA.xlsx como base.
+    Respeta exactamente el formato original: fuente, bordes, anchos, títulos.
+    Columnas B-I: Nombre | C.I. | CUD/NUREJ | Fecha | Ingreso | Actividad | Salida | Firma
+    La columna Firma siempre queda vacía (se firma de forma presencial).
+    """
+    from openpyxl import load_workbook
+    from copy import copy
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # 1. Datos del beneficiario
+    cursor.execute("""
+    SELECT nombre, ci, nudecud, tipo_codigo, carga_horaria, fecha_inicio, periodo_meses
+    FROM beneficiarios WHERE ci = ?
+    """,(ci,))
+    b = cursor.fetchone()
+    if not b:
+        conn.close()
+        return jsonify({"error": "Beneficiario no encontrado"}), 404
+
+    nombre        = b[0]
+    ci_ben        = b[1]
+    nudecud       = b[2]
+    tipo_codigo   = b[3]
+    carga         = b[4]
+
+    # 2. Asistencias del mes
+    cursor.execute("""
+    SELECT a.fecha, a.hora_ingreso, a.hora_salida, c.descripcion
+    FROM asistencias a
+    LEFT JOIN actividades_mensuales c ON a.fecha = c.fecha
+    WHERE a.ci = ?
+      AND strftime('%Y', a.fecha) = ?
+      AND strftime('%m', a.fecha) = ?
+    ORDER BY a.fecha, a.hora_ingreso
+    """,(ci, anio, mes.zfill(2)))
+    asistencias = cursor.fetchall()
+    conn.close()
+
+    mes_txt = MESES_ES[int(mes) - 1].capitalize()
+
+    # 3. Cargar el template original como base
+    template_path = os.path.join(BASE_DIR, "templates_word", "FORMATO PLANILLA.xlsx")
+    wb = load_workbook(template_path)
+    ws = wb.active
+
+    # 4. Actualizar títulos
+    ws["B4"] = "PLANILLA DE ASISTENCIA DE TRABAJO COMUNITARIO"
+    ws["B5"] = "DIRECCIÓN DE ADMINISTRACIÓN Y MEJORA DE LA INFRAESTRUCTURA Y EQUIPAMIENTO EDUCATIVO"
+    ws["B6"] = f"GOBIERNO AUTÓNOMO MUNICIPAL DE LA CIUDAD DE EL ALTO — {mes_txt.upper()} DE {anio}"
+
+    # 5. Encabezado CUD o NUREJ según el beneficiario
+    ws["D9"] = tipo_codigo
+
+    # 5b. Activar "Ajustar texto" en toda la tabla (encabezados + filas de datos)
+    from openpyxl.styles import Alignment as Aln
+    for fila_wrap in range(9, ws.max_row + 1):
+        for col_wrap in range(2, 10):   # columnas B=2 .. I=9
+            c = ws.cell(row=fila_wrap, column=col_wrap)
+            a = c.alignment
+            c.alignment = Aln(
+                horizontal = a.horizontal,
+                vertical   = a.vertical or "center",
+                wrap_text  = True,
+            )
+
+    # 6. Constantes de layout del template
+    COL_MAP = {"B": 2, "C": 3, "D": 4, "E": 5,
+               "F": 6, "G": 7, "H": 8, "I": 9}
+    PRIMERA_FILA   = 10
+    N_FILAS_TMPL   = 4    # el template trae 4 filas vacías (10-13)
+    alto_ref       = ws.row_dimensions[PRIMERA_FILA].height or 38.0
+
+    def copiar_estilo(src, dst):
+        dst.font          = copy(src.font)
+        dst.alignment     = copy(src.alignment)
+        dst.border        = copy(src.border)
+        dst.fill          = copy(src.fill)
+        dst.number_format = src.number_format
+
+    # 7. Insertar filas extra si hay más asistencias que las del template
+    n_asis = len(asistencias)
+    if n_asis > N_FILAS_TMPL:
+        ws.insert_rows(PRIMERA_FILA + N_FILAS_TMPL, n_asis - N_FILAS_TMPL)
+
+    # 8. Rellenar cada fila con los datos de asistencia
+    for idx, asis in enumerate(asistencias if asistencias else [("", "", "", "")] * N_FILAS_TMPL):
+        fila = PRIMERA_FILA + idx
+
+        # Para filas extra: copiar estilo desde la primera fila de datos
+        if idx >= N_FILAS_TMPL:
+            for col_num in COL_MAP.values():
+                copiar_estilo(
+                    ws.cell(row=PRIMERA_FILA, column=col_num),
+                    ws.cell(row=fila, column=col_num)
+                )
+            ws.row_dimensions[fila].height = alto_ref
+
+        # Fecha formateada dd/mm/yyyy
+        fecha_str = ""
+        if asis[0]:
+            try:
+                fecha_str = datetime.strptime(asis[0], "%Y-%m-%d").strftime("%d/%m/%Y")
+            except Exception:
+                fecha_str = asis[0]
+
+        valores = {
+            "B": nombre    if asis[0] else "",
+            "C": ci_ben    if asis[0] else "",
+            "D": nudecud   if asis[0] else "",
+            "E": fecha_str,
+            "F": asis[1] or "",
+            "G": asis[3] or ("Actividad comunitaria" if asis[0] else ""),
+            "H": asis[2] or "",
+            "I": "",   # Firma — siempre vacío
+        }
+        for letra, val in valores.items():
+            ws.cell(row=fila, column=COL_MAP[letra], value=val)
+
+    # 9. Enviar el archivo
+    stream = BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+    return send_file(
+        stream,
+        as_attachment=True,
+        download_name=f"planilla_{ci}_{anio}_{mes}.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
 
