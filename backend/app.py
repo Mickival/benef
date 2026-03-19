@@ -332,11 +332,12 @@ def generar_informe(ci, anio, mes):
         "carga_horaria":       carga,
         "periodo_meses":       b[4],
         "mes_anio_mayus_bold": f"{mes_txt.upper()} DE {anio}",
-        "mes_mayus_bold": f"{mes_txt.upper()}",
         "mes_anio_minus":      f"{mes_txt} de {anio}",
         "nombre_titulo":       nombre.title(),
         "nombre_mayus":        nombre.upper(),
         "fecha_inicio":        fmt_fecha_larga(b[3]),
+        "fecha_inicio_normal": datetime.strptime(b[3], "%Y-%m-%d").strftime("%d/%m/%y"),
+        "calcular_semanas":    periodo_meses * 4,
         "periodo_literal":     periodo_literal,
         "asistencias":         lista_asistencias,
         "jornadas_a_trabajar": jornadas_a_trabajar,
@@ -436,35 +437,43 @@ def generar_informe_conclusion(ci):
     else:
         periodo_literal = "No registrado"
 
+    cal_asistencia = calificacion_por_porcentaje(porcentaje)
+
+    if cal_asistencia == "Excelente":
+        observacion = "satisfactoriamente"
+    elif cal_asistencia == "Bueno":
+        observacion = "de manera satisfactoria"
+    elif cal_asistencia == "Regular":
+        observacion = "de manera regular"
+    elif cal_asistencia == "Suficiente":
+        observacion = "de manera suficiente"
+    else:
+        observacion = "con observaciones"
+
     context = {
         "nombre":         nombre,
         "ci":             b[1],
         "carga_horaria":  carga,
         "periodo_meses":  periodo_meses,
-
-        # Nombre en distintos formatos
         "nombre_titulo":  nombre.title(),
         "nombre_mayus":   nombre.upper(),
-
-        # Fechas clave — las nuevas etiquetas que pide la plantilla
         "fecha_inicio_lit":     fmt_fecha_corta(fecha_inicio),
         "fecha_conclusion_lit": fmt_fecha_obj(conclusion_dt),
-
-        # Período para el análisis narrativo
+        "fecha_inicio":         fmt_fecha_larga(fecha_inicio),
+        "fecha_inicio_normal":  datetime.strptime(fecha_inicio, "%Y-%m-%d").strftime("%d/%m/%y"),
+        "fecha_normal":         datetime.now().strftime("%d/%m/%y"),
+        "calcular_semanas":     periodo_meses * 4,
         "periodo_literal": periodo_literal,
-
-        # Tabla 1: todas las asistencias de la condena
         "asistencias": lista_asistencias,
-
-        # Tabla 2: evaluación final
         "jornadas_a_trabajar":     jornadas_a_trabajar,
         "jornadas_trabajadas":     jornadas_trabajadas,
         "porcentaje":              porcentaje,
-        "calificacion_asistencia": calificacion_por_porcentaje(porcentaje),
+        "calificacion_asistencia": cal_asistencia,
         "calificacion_desempeno":  "Bueno",
+        "observacion_desempeno":   observacion,
     }
 
-    doc = DocxTemplate(os.path.join(BASE_DIR, "templates_word", "INF. DE CONCLUSION PLANTILLA.docx"))
+    doc = DocxTemplate(os.path.join(BASE_DIR, "templates_word", "INF. CONCLUSION PLANTILLA.docx"))
     doc.render(context)
     stream = BytesIO()
     doc.save(stream)

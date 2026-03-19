@@ -525,9 +525,12 @@ grupos[clave].push(r)
 for(let clave in grupos){
 let [anio, mes] = clave.split("-")
 cont.innerHTML += `
-<div style="display:flex; justify-content:space-between; align-items:center;">
+<div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
 <h3>${mes}/${anio}</h3>
-<button onclick="generarInforme('${anio}','${mes}')">Generar Informe</button>
+<div style="display:flex; gap:8px;">
+  <button onclick="generarInforme('${anio}','${mes}')">Generar Informe</button>
+  <button onclick="generarPlanillaAsistencia('${anio}','${mes}')">Generar Planilla de Asistencia</button>
+</div>
 </div>
 `
 grupos[clave].forEach(r=>{
@@ -548,4 +551,11 @@ window.open(`/api/generar_informe/${ci}/${anio}/${mes}`, "_blank")
 function generarInformeConclusion(){
 let ci = obtenerCI()
 window.open(`/api/generar_informe_conclusion/${ci}`, "_blank")
+}
+
+
+// Generar planilla de asistencia mensual (pendiente de implementar)
+function generarPlanillaAsistencia(anio, mes){
+let ci = obtenerCI()
+window.open(`/api/generar_planilla/${ci}/${anio}/${mes}`, "_blank")
 }
