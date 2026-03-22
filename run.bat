@@ -1,4 +1,4 @@
 @echo off
-cd backend
+cd /d "%~dp0backend"
 python app.py
 pause
