@@ -6,6 +6,10 @@ from docxtpl import DocxTemplate
 from flask import send_file
 from io import BytesIO
 from datetime import datetime, timedelta
+import openpyxl
+import openpyxl
+from openpyxl.styles import Font, Alignment, Border, Side
+from copy import copy
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
@@ -451,6 +455,146 @@ def generar_informe(ci, anio, mes):
         download_name=f"informe_{ci}_{anio}_{mes}.docx",
         mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     )
+
+
+
+@app.route("/api/generar_planilla/<ci>/<anio>/<mes>")
+def generar_planilla(ci, anio, mes):
+ 
+    conn = get_connection()
+    cursor = conn.cursor()
+ 
+    # Datos del beneficiario
+    cursor.execute("""
+    SELECT nombre, ci, carga_horaria
+    FROM beneficiarios
+    WHERE ci = ?
+    """, (ci,))
+    b = cursor.fetchone()
+ 
+    if not b:
+        conn.close()
+        return jsonify({"error": "Beneficiario no encontrado"}), 404
+ 
+    # Asistencias del mes
+    cursor.execute("""
+    SELECT a.fecha, a.dia, a.hora_ingreso, a.hora_salida, c.descripcion
+    FROM asistencias a
+    LEFT JOIN actividades_mensuales c ON a.fecha = c.fecha
+    WHERE a.ci = ?
+    AND strftime('%Y', a.fecha) = ?
+    AND strftime('%m', a.fecha) = ?
+    ORDER BY a.fecha
+    """, (ci, anio, mes.zfill(2)))
+    asistencias = cursor.fetchall()
+    conn.close()
+    
+    MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio",
+             "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"]
+    mes_texto = MESES[int(mes)-1]
+    titulo = f"GOBIERNO AUTÓNOMO MUNICIPAL DE LA CIUDAD DE EL ALTO — {mes_texto.upper()} DE {anio}"
+ 
+    # Cargar plantilla
+    plantilla_path = os.path.join(BASE_DIR, "templates_word", "FORMATO_PLANTILLA.xlsx")
+    wb = openpyxl.load_workbook(plantilla_path)
+    ws = wb.active
+ 
+    # Estilos
+    thin         = Side(style='thin')
+    borde        = Border(left=thin, right=thin, top=thin, bottom=thin)
+    font_header  = Font(name='Arial', size=11, bold=True)
+    font_data    = Font(name='Arial', size=11)
+    align_center = Alignment(horizontal='center', vertical='center', wrap_text=True)
+ 
+    # Fila 7: mes y año
+    ws.merge_cells('B7:K7')
+    ws['B7'] = titulo
+    ws['B7'].font = Font(name='Arial', size=12, bold=True)
+    ws['B7'].alignment = Alignment(horizontal='center', vertical='center')
+ 
+    # Fila 9: encabezados de columna
+    headers = {
+    'A9': 'Fecha',
+    'B9': 'Día',
+    'C9': 'Nombre',
+    'D9': 'C.I.',
+    'E9': 'Horas de Trabajo',
+    'F9': 'Unidad Educativa',
+    'G9': 'Distrito',
+    'H9': 'Trabajo Desarrollado',
+    'I9': 'Hora Ingreso',
+    'J9': 'Hora Salida',
+    'K9': 'Firma',
+}
+    for coord, val in headers.items():
+        ws[coord]           = val
+        ws[coord].font      = font_header
+        ws[coord].alignment = align_center
+        ws[coord].border    = borde
+ 
+    # Ajustar anchos de columna
+    ws.column_dimensions['A'].width = 14
+    ws.column_dimensions['B'].width = 9
+    ws.column_dimensions['C'].width = 18
+    ws.column_dimensions['D'].width = 14
+    ws.column_dimensions['E'].width = 13
+    ws.column_dimensions['F'].width = 18
+    ws.column_dimensions['G'].width = 10
+    ws.column_dimensions['H'].width = 18
+    ws.column_dimensions['I'].width = 13
+    ws.column_dimensions['J'].width = 13
+    ws.column_dimensions['K'].width = 14
+ 
+    # Datos desde fila 10
+    nombre = b[0]
+    ci_val = b[1]
+    carga  = b[2]
+
+    for i, a in enumerate(asistencias):
+        fila = 10 + i
+        fecha_dt  = datetime.strptime(a[0], "%Y-%m-%d")
+        fecha_str = fecha_dt.strftime("%d/%m/%Y")
+        dia       = a[1] if a[1] else ""
+        ingreso   = a[2] if a[2] else ""
+        salida    = a[3] if a[3] else ""
+        actividad = a[4] if a[4] else ""
+
+        valores = {
+            1:  fecha_str,   # ✅ A
+            2:  dia,        # ✅ B
+            3:  nombre,     # ✅ C (AGREGADO)
+            4:  ci_val,     # ✅ D
+            5:  carga,      # ✅ E
+            6:  "",         # F
+            7:  "",         # G
+            8:  actividad,  # H
+            9:  ingreso,    # I
+            10: salida,     # J
+            11: "",         # K
+        }
+
+        for col, val in valores.items():
+            cell = ws.cell(row=fila, column=col)
+            cell.value = val
+            cell.font = font_data
+            cell.alignment = align_center
+            cell.border = borde
+ 
+        ws.row_dimensions[fila].height = 30
+ 
+    # Guardar en memoria y enviar
+    file_stream = BytesIO()
+    wb.save(file_stream)
+    file_stream.seek(0)
+ 
+    return send_file(
+        file_stream,
+        as_attachment=True,
+        download_name=f"planilla_{ci}_{mes_texto.lower()}_{anio}.xlsx",
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+ 
+
 
 
 # EJECUTAR APP

@@ -558,6 +558,7 @@ window.open(`/api/generar_informe_conclusion/${ci}`, "_blank")
 
 // Generar planilla de asistencia mensual (pendiente de implementar)
 function generarPlanillaAsistencia(anio, mes){
-let ci = obtenerCI()
-window.open(`/api/generar_planilla/${ci}/${anio}/${mes}`, "_blank")
+  let ci = obtenerCI()
+  window.open(`/api/generar_planilla/${ci}/${anio}/${mes}`, "_blank")
 }
+
