@@ -514,17 +514,15 @@ def generar_planilla(ci, anio, mes):
  
     # Fila 9: encabezados de columna
     headers = {
-    'A9': 'Fecha',
-    'B9': 'Día',
-    'C9': 'Nombre',
-    'D9': 'C.I.',
-    'E9': 'Horas de Trabajo',
-    'F9': 'Unidad Educativa',
-    'G9': 'Distrito',
-    'H9': 'Trabajo Desarrollado',
-    'I9': 'Hora Ingreso',
-    'J9': 'Hora Salida',
-    'K9': 'Firma',
+    'B9': 'Fecha',
+    'C9': 'Día',
+    'D9': 'Nombre',
+    'E9': 'C.I.',
+    'F9': 'Horas de Trabajo',
+    'G9': 'Trabajo Desarrollado',
+    'H9': 'Hora Ingreso',
+    'I9': 'Hora Salida',
+    'J9': 'Firma',
 }
     for coord, val in headers.items():
         ws[coord]           = val
@@ -533,17 +531,17 @@ def generar_planilla(ci, anio, mes):
         ws[coord].border    = borde
  
     # Ajustar anchos de columna
-    ws.column_dimensions['A'].width = 14
-    ws.column_dimensions['B'].width = 9
-    ws.column_dimensions['C'].width = 18
-    ws.column_dimensions['D'].width = 14
-    ws.column_dimensions['E'].width = 13
-    ws.column_dimensions['F'].width = 18
-    ws.column_dimensions['G'].width = 10
-    ws.column_dimensions['H'].width = 18
-    ws.column_dimensions['I'].width = 13
-    ws.column_dimensions['J'].width = 13
-    ws.column_dimensions['K'].width = 14
+    #ws.column_dimensions['A'].width = 14
+    #ws.column_dimensions['B'].width = 9
+    #ws.column_dimensions['C'].width = 18
+    #ws.column_dimensions['D'].width = 14
+    #ws.column_dimensions['E'].width = 13
+    #ws.column_dimensions['F'].width = 18
+    #ws.column_dimensions['G'].width = 10
+    #ws.column_dimensions['H'].width = 18
+    #ws.column_dimensions['I'].width = 13
+    #ws.column_dimensions['J'].width = 13
+    #ws.column_dimensions['K'].width = 14
  
     # Datos desde fila 10
     nombre = b[0]
@@ -565,12 +563,10 @@ def generar_planilla(ci, anio, mes):
             3:  nombre,     # ✅ C (AGREGADO)
             4:  ci_val,     # ✅ D
             5:  carga,      # ✅ E
-            6:  "",         # F
-            7:  "",         # G
-            8:  actividad,  # H
-            9:  ingreso,    # I
-            10: salida,     # J
-            11: "",         # K
+            6:  actividad,  # D
+            7:  ingreso,    # E
+            8: salida,     # F
+            9: "",         # G
         }
 
         for col, val in valores.items():
